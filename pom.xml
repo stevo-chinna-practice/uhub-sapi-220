@@ -29,7 +29,7 @@
 						<extensions>true</extensions>
 						<configuration>
 							<cloudHubDeployment>
-								<applicationName>uho-dev-uhub-sapi</applicationName>
+								<applicationName>temp-dev-uhub-sapi-220</applicationName>
 								<environment>dev</environment>
 								<region>us-east-2</region>
 								<workers>1</workers>
