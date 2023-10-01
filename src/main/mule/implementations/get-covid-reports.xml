@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+
+    <flow name="get:\reports:uhub-sapi-config">
+		<set-variable value="#[attributes.headers.'x-correlation-id' default &quot;&quot;]" doc:name="Set correlationId" doc:id="5de49b3f-f6d5-4121-a045-a9ca5b03ab4d" variableName="correlationId" />
+		<logger level="INFO" doc:name="Start Log" doc:id="b4ff83ce-be12-4659-8625-2b122d161c60" message="transactionID: #[vars.transactionId], correlationID: #[vars.correlationID], message:Started get reports flow and received query parameter is - #[attributes.queryParams.state]" />
+		<ee:transform doc:name="Prepare DynamicQuery" doc:id="6d859bc5-fdd2-48f8-a574-64eb2a2ed890" >
+			<ee:message />
+			<ee:variables >
+				<ee:set-variable variableName="reportsDynamicQuery" ><![CDATA[
+if(!isEmpty(attributes.queryParams.state)) (
+	"select count(*) as count, case_type, state from cvd_case_master where state = '" ++ upper(attributes.queryParams.state) ++ "' group by case_type, state"
+) else (
+	"select count(*) as count, case_type, state from cvd_case_master group by case_type, state"
+)]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="fetch-case-reports-sub-flow" doc:id="8126c290-075a-4d88-bebe-670147535b99" name="fetch-case-reports-sub-flow" />
+		<ee:transform doc:name="Prepare Response" doc:id="3e4d31bf-0b16-49aa-aa87-8a8ac20ace20" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun vaccinatedByState(state) = (payload filter(($.STATE == state as String) and ($.CASE_TYPE == "vaccinated")) map {
+	COUNT: $.COUNT
+})[0]
+---
+((payload groupBy($.STATE) mapObject {
+	caseReports: {
+		state: $$,
+		reports: {
+			total: ($.COUNT reduce $ + $$) - (vaccinatedByState($$).COUNT as Number default 0),
+			($ orderBy($.CASE_TYPE) map {
+				($.CASE_TYPE): $.COUNT
+			})
+		}
+	}
+}).*caseReports) default []]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Log" doc:id="088ab861-cf85-4506-afaa-045a44d518b6" message="transactionID: #[vars.transactionId], correlationID: #[vars.correlationID], message: Completed get reports flow, payload: #[payload]" />
+    
+</flow>		
+	
+	</mule>
