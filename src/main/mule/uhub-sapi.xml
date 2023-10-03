@@ -40,7 +40,8 @@ output application/json
                         <ee:set-variable variableName="httpStatus">404</ee:set-variable>
                     </ee:variables>
                 </ee:transform>
-            </on-error-propagate>
+            </on-error-propagate>        
+
         </error-handler>
     </flow>
 

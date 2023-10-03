@@ -3,8 +3,8 @@ http:
   
 database:
   uhub:
-    host: "localhost"
-    port: "3306"
-    user: "root"
-    password: "![VwIc9DwccX1H93Ph9VBf7w==]"
-    instance: "local-database"
+    host: "mysql-148367-0.cloudclusters.net"
+    port: "14055"
+    user: "admin"
+    password: "![j7pMAGRi9pqiE25yAutHOA==]"
+    instance: "uhub"
